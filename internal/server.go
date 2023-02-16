@@ -80,10 +80,9 @@ func registerGRPCHandlers(ctx context.Context, c *Configuration) {
 	}
 
 	mux := runtime.NewServeMux(
+		// Use in order to leverage the omitempty flag in the JSON definitions
+		// to remove empty fields from the response
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-			MarshalOptions: protojson.MarshalOptions{
-				UseProtoNames: true,
-			},
 			UnmarshalOptions: protojson.UnmarshalOptions{
 				DiscardUnknown: true,
 			},
