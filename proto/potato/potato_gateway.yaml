@@ -1,0 +1,17 @@
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+    - selector: example.potato.PotatoService.AddPotato
+      post: /v1/potatoes
+      body: "*"
+    - selector: example.potato.PotatoService.GetPotato
+      get: /v1/potatoes/{potato_id}
+    - selector: example.potato.PotatoService.GetPotatoes
+      get: /v1/potatoes
+    - selector: example.potato.PotatoService.UpdatePotato
+      put: /v1/potatoes/{potato.id}
+      body: "*"
+    - selector: example.potato.PotatoService.DeletePotato
+      delete: /v1/potatoes/{potato_id}

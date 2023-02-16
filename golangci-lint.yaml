@@ -1,0 +1,19 @@
+# This is the golangci-lint configuration.
+# For reference see https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
+linters:
+  enable:
+    - gofmt
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - typecheck
+    #    - rowserrcheck
+    - gosec
+    - unconvert
+
+skip-dirs:
+  - build
+  - vendor
