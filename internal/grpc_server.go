@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net"
-	"strconv"
 )
 
 type GRPCServer struct {
@@ -73,7 +72,7 @@ func newPotatoes() []*pb.Potato {
 
 // GetPotatoes returns a list of potatoes
 // Sorting is handle via the *order_by* field
-// Pagination is handled via the *page_size* and *page_token* fields
+// Pagination is handled via the *page_size* and *pagen* fields
 func (gs *GRPCServer) GetPotatoes(ctx context.Context, req *pb.GetPotatoesRequest) (*pb.GetPotatoesResponse, error) {
 	res := &pb.GetPotatoesResponse{
 		Potatoes: newPotatoes(),
@@ -84,7 +83,7 @@ func (gs *GRPCServer) GetPotatoes(ctx context.Context, req *pb.GetPotatoesReques
 		return nil, err
 	}
 
-	res, err = withPagination(res, int(req.PageSize), req.PageToken)
+	res, err = withPagination(res, int(req.PageSize), int(req.Page))
 	if err != nil {
 		return nil, err
 	}
@@ -92,8 +91,8 @@ func (gs *GRPCServer) GetPotatoes(ctx context.Context, req *pb.GetPotatoesReques
 }
 
 // The following pagination is only for demo purpose. Real pagination should be done in the database.
-func withPagination(p *pb.GetPotatoesResponse, pageSize int, pageToken string) (*pb.GetPotatoesResponse, error) {
-	log.Debug().Int("pageSize", pageSize).Str("pageToken", pageToken).Msg("with Pagination")
+func withPagination(p *pb.GetPotatoesResponse, pageSize int, page int) (*pb.GetPotatoesResponse, error) {
+	log.Debug().Int("pageSize", pageSize).Int("page", page).Msg("with Pagination")
 
 	// Check boundaries
 	if pageSize < 0 {
@@ -122,18 +121,13 @@ func withPagination(p *pb.GetPotatoesResponse, pageSize int, pageToken string) (
 	maxPage := len(p.Potatoes)/pageSize - 1
 	var pt = 0
 
-	if pageToken != "" {
-		v, err := strconv.Atoi(pageToken)
-		pt = v
-		if err != nil {
-			// Improve the error handling, cf a few lines above
-			return nil, status.Errorf(codes.InvalidArgument, "pageToken must be an integer")
-		}
+	if page != 0 {
+		pt = page
 	}
 
 	if pt > maxPage {
 		// Improve the error handling, cf a few lines above
-		return nil, status.Errorf(codes.InvalidArgument, "pageToken is out of bound")
+		return nil, status.Errorf(codes.InvalidArgument, "page is out of bound")
 	}
 
 	// Compute paginated response
@@ -141,7 +135,9 @@ func withPagination(p *pb.GetPotatoesResponse, pageSize int, pageToken string) (
 		start := pageSize * pt
 		end := pageSize * (pt + 1)
 		p.Potatoes = p.Potatoes[start:end]
-		p.NextPageToken = strconv.Itoa(pt + 1)
+		if pt < maxPage {
+			p.NextPage = int32(pt + 1)
+		}
 	}
 	return p, nil
 }
